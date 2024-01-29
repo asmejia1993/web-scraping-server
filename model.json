@@ -1,0 +1,50 @@
+{
+    "company": {
+        "owner": {
+            "first_name": "josh",
+            "last_name": "porch",
+            "contact": {
+                "email": "josh@my-enterprise-holding.org",
+                "phone": "+1 800 465 6574",
+                "location": {
+                    "city": "Toronto",
+                    "country": "Canada",
+                    "address": "14 bulevar",
+                    "zip_code": "N6D 92A"
+                }
+            }
+        },
+        "information": {
+            "name": "My entreprise holding",
+            "tax_number": "DD79654121",
+            "location": {
+                "city": "Toronto",
+                "country": "Canada",
+                "address": "78 Rober ST",
+                "zip_code": "F9A 92O"
+            }
+        },
+        "franchises": [
+            {
+                "name": "Park royal",
+                "url": "www.park-royalhotels.com",
+                "location": {
+                    "city": "Cancun",
+                    "Country": "Mexico",
+                    "Address": "Libertadores av 40 - 20",
+                    "zip_code": "45971"
+                }
+            },
+            {
+                "name": "Marriot",
+                "url": "www.marriott.com",
+                "location": {
+                    "city": "Miami",
+                    "Country": "United States",
+                    "Address": "35 Tom st 18 bridge av",
+                    "zip_code": "115745"
+                }
+            }
+        ]
+    }
+}
