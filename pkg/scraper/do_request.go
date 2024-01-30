@@ -17,18 +17,19 @@ type Service struct {
 	limiter    ratelimit.Limiter
 }
 
-func NewService() *Service {
+func NewService(log *logrus.Logger) *Service {
 	httpClient := &http.Client{
 		Timeout: 5 * time.Second,
 	}
 	return &Service{
 		httpClient: httpClient,
+		logger:     log,
 		limiter:    ratelimit.New(10),
 	}
 }
 
 type CallResponse struct {
-	Payload string
+	Payload []byte
 }
 
 func (s *Service) CallAPI(url string) (CallResponse, error) {
@@ -39,7 +40,7 @@ func (s *Service) CallAPI(url string) (CallResponse, error) {
 	}
 
 	start := time.Now()
-	s.limiter.Take()
+	//s.limiter.Take()
 
 	res, err := s.httpClient.Do(req)
 	if err != nil {
@@ -58,6 +59,6 @@ func (s *Service) CallAPI(url string) (CallResponse, error) {
 	}
 
 	spentSeconds := time.Since(start).Seconds()
-	s.logger.Infof("call api duration: %v", spentSeconds)
-	return CallResponse{Payload: string(content)}, nil
+	s.logger.Infof("call api duration: %v with response: %s", spentSeconds, string(content))
+	return CallResponse{Payload: content}, nil
 }

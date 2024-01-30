@@ -25,6 +25,16 @@ type Franchise struct {
 	Location Location `json:"location" bson:"location"`
 }
 
+type Site struct {
+	Protocol   string   `json:"protocol" bson:"protocol"`
+	Step       int      `json:"steps" bson:"steps"`
+	ServerName []string `json:"server_names" bson:"server_names"`
+	CreatedAt  string   `json:"created_at" bson:"created_at"`
+	ExpiresAt  string   `json:"expires_at" bson:"expires_at"`
+	Registrant string   `json:"registrant" bson:"registrant"`
+	Email      string   `json:"email_contact" bson:"email_contact"`
+}
+
 type Information struct {
 	Name      string   `json:"name" bson:"name"`
 	TaxNumber string   `json:"tax_number" bson:"tax_number"`
@@ -43,3 +53,6 @@ type FranchiseInfo struct {
 }
 
 const Collection string = "franchises_hotel"
+
+type Franchise_Request struct {
+}

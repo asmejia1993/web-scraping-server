@@ -8,6 +8,6 @@ import (
 
 type IFranchiseRepository interface {
 	FindFranchisesById(id string, ctx context.Context) model.FranchiseInfo
-	CreateFranchisesHotel(ctx context.Context, req model.FranchiseInfo) (string, error)
+	CreateFranchisesHotel(ctx context.Context, req model.FranchiseInfoReq) (string, error)
 	//UpdateFranchiseInfo(ctx context.Context) model.FranchiseInfo
 }

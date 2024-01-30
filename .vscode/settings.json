@@ -11,6 +11,7 @@
         "Subrouter",
         "usecase",
         "Whois",
-        "whoisparser"
+        "whoisparser",
+        "workchan"
     ]
 }

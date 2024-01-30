@@ -28,7 +28,7 @@ func (f *franchiseRepository) FindFranchisesById(id string, ctx context.Context)
 	return franchisesInfo
 }
 
-func (f *franchiseRepository) CreateFranchisesHotel(ctx context.Context, req model.FranchiseInfo) (string, error) {
+func (f *franchiseRepository) CreateFranchisesHotel(ctx context.Context, req model.FranchiseInfoReq) (string, error) {
 	dbName := f.db.DBName
 	coll := model.Collection
 	res, err := f.db.Client.Database(dbName).Collection(coll).InsertOne(ctx, req)

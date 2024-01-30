@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/asmejia1993/web-scraping-server/pkg/domain/hotel-franchises/model"
@@ -9,12 +10,11 @@ import (
 func (hf handlerFranchises) Create() http.HandlerFunc {
 
 	type inserted struct {
-		ID  string `json:"id"`
-		URL string `json:"link"`
+		ID string `json:"id"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req model.FranchiseInfo
+		var req model.FranchiseInfoReq
 
 		err := hf.decode(r, &req)
 		if err != nil {
@@ -30,8 +30,29 @@ func (hf handlerFranchises) Create() http.HandlerFunc {
 			hf.respond(w, err, http.StatusInternalServerError)
 			return
 		}
-		//call scraper fn
-		hf.sc.InitScraping(req.Company.Franchises)
+
+		//Queue new task
+		hf.worker.Start(r.Context(), len(req.Company.Franchises))
+		for _, v := range req.Company.Franchises {
+			scrapReq := model.FranchiseScraper{
+				Id:        response.ID,
+				Franchise: v,
+			}
+			hf.worker.QueueTask(scrapReq)
+		}
+
+		hf.receiveResultFromWorker(r.Context())
 		hf.respond(w, response, http.StatusCreated)
+	}
+}
+
+func (hf handlerFranchises) receiveResultFromWorker(ctx context.Context) {
+	for res := range hf.resultChan {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			hf.logger.Infof("Received result from worker: %v", res)
+		}
 	}
 }
