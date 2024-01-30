@@ -11,15 +11,22 @@ import (
 
 	"github.com/asmejia1993/web-scraping-server/pkg/config"
 	"github.com/asmejia1993/web-scraping-server/pkg/http/rest/handler"
+	"github.com/asmejia1993/web-scraping-server/pkg/worker"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	WORKER_THREAD = 10
+	BUFFER        = 1000
 )
 
 type Server struct {
 	logger *logrus.Logger
 	router *mux.Router
 	config *config.AppConfig
+	worker worker.IWorker
 }
 
 func NewServer() (*Server, error) {
@@ -28,13 +35,14 @@ func NewServer() (*Server, error) {
 
 	log := NewLogger()
 	router := mux.NewRouter()
-	handler.Register(router, log, appConfig.MongoDBInfo)
 
 	s := Server{
 		logger: log,
 		router: router,
 		config: appConfig,
+		worker: worker.New(WORKER_THREAD, BUFFER, log),
 	}
+	handler.Register(router, log, appConfig.MongoDBInfo, s.worker)
 	return &s, nil
 }
 
@@ -66,6 +74,7 @@ func (s *Server) Run(ctx context.Context) error {
 	case <-stopServer:
 		s.logger.Warn("server received STOP signal")
 		s.config.CloseMongoDB(ctx)
+		s.worker.Stop()
 
 		err := server.Shutdown(ctx)
 		if err != nil {

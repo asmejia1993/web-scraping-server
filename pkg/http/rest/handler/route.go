@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/asmejia1993/web-scraping-server/pkg/config"
+	"github.com/asmejia1993/web-scraping-server/pkg/worker"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
@@ -14,8 +15,8 @@ const (
 	webScraping     = "/web-scraping"
 )
 
-func Register(r *mux.Router, lg *logrus.Logger, db *config.DBInfo) {
-	handler := newHandler(lg, db)
+func Register(r *mux.Router, lg *logrus.Logger, db *config.DBInfo, w worker.IWorker) {
+	handler := newHandler(lg, db, w)
 	api := r.PathPrefix("/api").Subrouter()
 	apiV1 := api.PathPrefix(apiVersion).Subrouter()
 	apiV1.Use(handler.MiddlewareLogger())

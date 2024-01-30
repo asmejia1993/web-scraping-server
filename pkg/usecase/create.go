@@ -6,6 +6,6 @@ import (
 	"github.com/asmejia1993/web-scraping-server/pkg/domain/hotel-franchises/model"
 )
 
-func (s Service) Create(ctx context.Context, req model.FranchiseInfoReq) (string, error) {
+func (s Service) Create(ctx context.Context, req model.FranchiseInfo) (string, error) {
 	return s.repo.CreateFranchisesHotel(ctx, req)
 }

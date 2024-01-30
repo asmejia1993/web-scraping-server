@@ -1,14 +1,18 @@
 {
     "cSpell.words": [
+        "arrs",
+        "Backoff",
         "bson",
         "gocolly",
         "Infof",
         "likexian",
         "logrus",
         "ratelimit",
+        "resultchan",
         "sirupsen",
         "SSLLABS",
         "Subrouter",
+        "unmarshalling",
         "usecase",
         "Whois",
         "whoisparser",

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/asmejia1993/web-scraping-server/pkg/domain/hotel-franchises/model"
+	"github.com/asmejia1993/web-scraping-server/pkg/worker"
 )
 
 func (hf handlerFranchises) Create() http.HandlerFunc {
@@ -21,7 +22,8 @@ func (hf handlerFranchises) Create() http.HandlerFunc {
 			hf.respond(w, err, http.StatusInternalServerError)
 			return
 		}
-		res, err := hf.fService.Create(r.Context(), req)
+		fr := model.ConvertReqToFranchiseInfo(req)
+		res, err := hf.fService.Create(r.Context(), fr)
 		response := inserted{
 			ID: res,
 		}
@@ -38,11 +40,22 @@ func (hf handlerFranchises) Create() http.HandlerFunc {
 				Id:        response.ID,
 				Franchise: v,
 			}
-			hf.worker.QueueTask(scrapReq)
+
+			if err := hf.worker.QueueTask(scrapReq); err != nil {
+				hf.logger.WithError(err).Info("failed to queue task")
+				if err == worker.ErrWorkerBusy {
+					w.Header().Set("Retry-After", "60")
+					hf.respond(w, `{"error": "workers are busy, try again later"}`, http.StatusServiceUnavailable)
+					return
+				}
+				hf.respond(w, `{"error": "failed to queue task"}`, http.StatusInternalServerError)
+				return
+			}
 		}
 
-		hf.receiveResultFromWorker(r.Context())
-		hf.respond(w, response, http.StatusCreated)
+		hf.respond(w, response, http.StatusAccepted)
+
+		go hf.receiveResultFromWorker(r.Context())
 	}
 }
 

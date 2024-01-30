@@ -58,40 +58,40 @@ type FranchiseScraper struct {
 	Franchise FranchiseReq `json:"franchise"`
 }
 
-func ConvertReqToFranchiseInfo(req CompanyReq) FranchiseInfo {
+func ConvertReqToFranchiseInfo(req FranchiseInfoReq) FranchiseInfo {
 	var franchiseInfo FranchiseInfo
 
 	// Convert OwnerReq to Owner
 	owner := Owner{
-		FirstName: req.Owner.FirstName,
-		LastName:  req.Owner.LastName,
+		FirstName: req.Company.Owner.FirstName,
+		LastName:  req.Company.Owner.LastName,
 		Contact: Contact{
-			Email: req.Owner.Contact.Email,
-			Phone: req.Owner.Contact.Phone,
+			Email: req.Company.Owner.Contact.Email,
+			Phone: req.Company.Owner.Contact.Phone,
 			Location: Location{
-				City:    req.Owner.Contact.Location.City,
-				Country: req.Owner.Contact.Location.Country,
-				Address: req.Owner.Contact.Location.Address,
-				ZipCode: req.Owner.Contact.Location.ZipCode,
+				City:    req.Company.Owner.Contact.Location.City,
+				Country: req.Company.Owner.Contact.Location.Country,
+				Address: req.Company.Owner.Contact.Location.Address,
+				ZipCode: req.Company.Owner.Contact.Location.ZipCode,
 			},
 		},
 	}
 
 	// Convert InformationReq to Information
 	information := Information{
-		Name:      req.Information.Name,
-		TaxNumber: req.Information.TaxNumber,
+		Name:      req.Company.Information.Name,
+		TaxNumber: req.Company.Information.TaxNumber,
 		Location: Location{
-			City:    req.Information.Location.City,
-			Country: req.Information.Location.Country,
-			Address: req.Information.Location.Address,
-			ZipCode: req.Information.Location.ZipCode,
+			City:    req.Company.Information.Location.City,
+			Country: req.Company.Information.Location.Country,
+			Address: req.Company.Information.Location.Address,
+			ZipCode: req.Company.Information.Location.ZipCode,
 		},
 	}
 
 	// Convert FranchiseReq to Franchise
 	var franchises []Franchise
-	for _, fr := range req.Franchises {
+	for _, fr := range req.Company.Franchises {
 		franchises = append(franchises, Franchise{
 			Name: fr.Name,
 			URL:  fr.URL,

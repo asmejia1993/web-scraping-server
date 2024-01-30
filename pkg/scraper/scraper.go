@@ -11,6 +11,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const RETRY_TIME = 3
+
 type Scraper struct {
 	logger *logrus.Logger
 }
@@ -51,9 +53,9 @@ func NewScraperTask(lg *logrus.Logger) Scraper {
 }
 
 func (s *Scraper) InitScraping(req model.FranchiseScraper) model.SiteRes {
-	d := strings.Split(req.Franchise.URL, ".")
-	size := len(d)
-	url := strings.Join(d[1:size], ".")
+	arrs := strings.Split(req.Franchise.URL, ".")
+	size := len(arrs)
+	url := strings.Join(arrs[1:size], ".")
 	res, err := whois.Whois(url)
 	if err != nil {
 		s.logger.Errorf("error invoking whois api: %v", err)
@@ -65,7 +67,7 @@ func (s *Scraper) InitScraping(req model.FranchiseScraper) model.SiteRes {
 		return model.SiteRes{}
 	}
 	sslLabs := sslLabs{}
-	isValid := s.validateWebsite(req.Franchise.URL, &sslLabs)
+	isValid := s.validateWebsite(url, &sslLabs)
 	protocol := sslLabs.Protocol
 
 	hostNames := make([]string, len(sslLabs.Endpoints))
@@ -89,14 +91,14 @@ func (s *Scraper) InitScraping(req model.FranchiseScraper) model.SiteRes {
 func (s *Scraper) validateWebsite(url string, sLabs *sslLabs) bool {
 	httpService := NewService(s.logger)
 	formattedUrl := fmt.Sprintf(SSLLABS_URL, url)
-	result, err := httpService.CallAPI(formattedUrl)
+	result, err := httpService.CallAPIWithRetry(formattedUrl, RETRY_TIME)
 	if err != nil {
 		return false
 	}
 
 	err = json.Unmarshal(result.Payload, &sLabs)
 	if err != nil {
-		fmt.Println(err)
+		s.logger.Errorf("error unmarshalling JSON response: %v", err)
 		return false
 	}
 	return true
