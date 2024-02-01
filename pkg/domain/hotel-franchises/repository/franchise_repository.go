@@ -9,5 +9,6 @@ import (
 type IFranchiseRepository interface {
 	FindFranchisesById(id string, ctx context.Context) model.FranchiseInfo
 	CreateFranchisesHotel(ctx context.Context, req model.FranchiseInfo) (string, error)
-	//UpdateFranchiseInfo(ctx context.Context) model.FranchiseInfo
+	UpSertFranchiseSite(ctx context.Context, site model.SiteRes) error
+	All(ctx context.Context, params map[string][]string) ([]model.FranchiseInfo, error)
 }

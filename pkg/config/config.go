@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 
@@ -28,21 +27,21 @@ type AppConfig struct {
 }
 
 func LoadConfig() *AppConfig {
-	port, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
-	//port, err := strconv.Atoi("8003")
+	//port, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	port, err := strconv.Atoi("8003")
 	if err != nil {
 		log.Fatal(err)
 	}
-	addr := ":" + os.Getenv("SERVER_PORT")
-	//addr := ":" + "8003"
+	//addr := ":" + os.Getenv("SERVER_PORT")
+	addr := ":" + "8003"
 	httpInfo := &HTTPInfo{
 		Addr: addr,
 		Port: port,
 	}
 
 	client := connectMongoDb()
-	dbName := os.Getenv("DATABASE_NAME")
-	//dbName := "web-scraping"
+	//dbName := os.Getenv("DATABASE_NAME")
+	dbName := "web-scraping"
 
 	dbInfo := &DBInfo{
 		Client: client,
@@ -58,10 +57,10 @@ func LoadConfig() *AppConfig {
 }
 
 func connectMongoDb() *mongo.Client {
-	mongoHost := os.Getenv("DATABASE_HOST")
-	dbName := os.Getenv("DATABASE_NAME")
-	// mongoHost := "mongodb://127.0.0.1:27017/"
-	// dbName := "web-scraping"
+	// mongoHost := os.Getenv("DATABASE_HOST")
+	// dbName := os.Getenv("DATABASE_NAME")
+	mongoHost := "mongodb://127.0.0.1:27017/"
+	dbName := "web-scraping"
 	url := fmt.Sprintf("%s,%s", mongoHost, dbName)
 
 	clientOptions := options.Client().ApplyURI(url).SetMaxPoolSize(100).SetServerSelectionTimeout(10 * time.Second).SetSocketTimeout(10 * time.Second).SetHeartbeatInterval(5 * time.Second)
@@ -73,7 +72,6 @@ func connectMongoDb() *mongo.Client {
 		panic(err)
 	}
 
-	//defer client.Disconnect(ctx)
 	defer cancel()
 
 	if err != nil {

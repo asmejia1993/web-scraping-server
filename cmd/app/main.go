@@ -14,7 +14,7 @@ func main() {
 }
 
 func run(ctx context.Context) error {
-	server, err := rest.NewServer()
+	server, err := rest.NewServer(ctx)
 	if err != nil {
 		return err
 	}

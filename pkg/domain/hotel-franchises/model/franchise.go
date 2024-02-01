@@ -23,16 +23,17 @@ type Franchise struct {
 	Name     string   `json:"name" bson:"name"`
 	URL      string   `json:"url" bson:"url"`
 	Location Location `json:"location" bson:"location"`
+	Site     Site     `json:"site" bson:"site"`
 }
 
 type Site struct {
-	Protocol   string   `json:"protocol" bson:"protocol"`
-	Step       int      `json:"steps" bson:"steps"`
-	ServerName []string `json:"server_names" bson:"server_names"`
-	CreatedAt  string   `json:"created_at" bson:"created_at"`
-	ExpiresAt  string   `json:"expires_at" bson:"expires_at"`
-	Registrant string   `json:"registrant" bson:"registrant"`
-	Email      string   `json:"email_contact" bson:"email_contact"`
+	Protocol    string   `json:"protocol" bson:"protocol"`
+	Step        int      `json:"steps" bson:"steps"`
+	ServerNames []string `json:"server_names" bson:"server_names"`
+	CreatedAt   string   `json:"created_at" bson:"created_at"`
+	ExpiresAt   string   `json:"expires_at" bson:"expires_at"`
+	Registrant  string   `json:"registrant" bson:"registrant"`
+	Email       string   `json:"email_contact" bson:"email_contact"`
 }
 
 type Information struct {

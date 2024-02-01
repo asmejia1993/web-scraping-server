@@ -3,17 +3,17 @@ module github.com/asmejia1993/web-scraping-server
 go 1.19
 
 require (
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/gorilla/mux v1.8.1
 	github.com/likexian/whois v1.15.1
 	github.com/likexian/whois-parser v1.24.10
 	github.com/rs/cors v1.10.1
 	github.com/sirupsen/logrus v1.9.3
 	go.mongodb.org/mongo-driver v1.13.1
-	go.uber.org/ratelimit v0.3.0
+	golang.org/x/time v0.5.0
 )
 
 require (
-	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect

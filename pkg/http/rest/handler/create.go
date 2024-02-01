@@ -2,11 +2,13 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/asmejia1993/web-scraping-server/pkg/domain/hotel-franchises/model"
-	"github.com/asmejia1993/web-scraping-server/pkg/worker"
 )
+
+var ErrWorkerBusy = errors.New("workers are busy, try again later")
 
 func (hf handlerFranchises) Create() http.HandlerFunc {
 
@@ -34,16 +36,15 @@ func (hf handlerFranchises) Create() http.HandlerFunc {
 		}
 
 		//Queue new task
-		hf.worker.Start(r.Context(), len(req.Company.Franchises))
 		for _, v := range req.Company.Franchises {
 			scrapReq := model.FranchiseScraper{
 				Id:        response.ID,
 				Franchise: v,
 			}
 
-			if err := hf.worker.QueueTask(scrapReq); err != nil {
+			if err := hf.workerPool.QueueTask(scrapReq); err != nil {
 				hf.logger.WithError(err).Info("failed to queue task")
-				if err == worker.ErrWorkerBusy {
+				if err == ErrWorkerBusy {
 					w.Header().Set("Retry-After", "60")
 					hf.respond(w, `{"error": "workers are busy, try again later"}`, http.StatusServiceUnavailable)
 					return
@@ -55,17 +56,23 @@ func (hf handlerFranchises) Create() http.HandlerFunc {
 
 		hf.respond(w, response, http.StatusAccepted)
 
-		go hf.receiveResultFromWorker(r.Context())
+		go func() {
+			for res := range hf.workerPool.GetResultChan() {
+				hf.logger.Infof("site received: %v", res)
+				if err := hf.processResult(r.Context(), res); err != nil {
+					hf.logger.Errorf("error processing result from worker: %v", err)
+				} else {
+					hf.logger.Infof("updated franchise with: %v", res)
+				}
+			}
+		}()
 	}
 }
 
-func (hf handlerFranchises) receiveResultFromWorker(ctx context.Context) {
-	for res := range hf.resultChan {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			hf.logger.Infof("Received result from worker: %v", res)
-		}
+func (hf handlerFranchises) processResult(ctx context.Context, res model.SiteRes) error {
+	if err := hf.fService.Upsert(ctx, res); err != nil {
+		hf.logger.Errorf("error calling upsert handler: %v", err)
+		return err
 	}
+	return nil
 }

@@ -11,7 +11,8 @@ import (
 
 	"github.com/asmejia1993/web-scraping-server/pkg/config"
 	"github.com/asmejia1993/web-scraping-server/pkg/http/rest/handler"
-	"github.com/asmejia1993/web-scraping-server/pkg/worker"
+	"github.com/asmejia1993/web-scraping-server/pkg/scraper"
+	"github.com/asmejia1993/web-scraping-server/pkg/workerpool"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
@@ -26,23 +27,26 @@ type Server struct {
 	logger *logrus.Logger
 	router *mux.Router
 	config *config.AppConfig
-	worker worker.IWorker
+	worker *workerpool.WorkerPool
 }
 
-func NewServer() (*Server, error) {
+func NewServer(ctx context.Context) (*Server, error) {
 
+	//Initialize
 	appConfig := config.LoadConfig()
-
 	log := NewLogger()
 	router := mux.NewRouter()
+	scraper := scraper.NewScraperTask(log)
+	worker := workerpool.NewWorkerPool(WORKER_THREAD, BUFFER, log, &scraper, ctx)
 
 	s := Server{
 		logger: log,
 		router: router,
 		config: appConfig,
-		worker: worker.New(WORKER_THREAD, BUFFER, log),
+		worker: worker,
 	}
-	handler.Register(router, log, appConfig.MongoDBInfo, s.worker)
+	hf := handler.NewHandler(log, appConfig.MongoDBInfo, s.worker, ctx)
+	handler.Register(router, &hf, ctx)
 	return &s, nil
 }
 
@@ -71,11 +75,11 @@ func (s *Server) Run(ctx context.Context) error {
 	select {
 	case err := <-serverErrors:
 		return fmt.Errorf("error: starting REST API server: %w", err)
+	case <-ctx.Done():
 	case <-stopServer:
 		s.logger.Warn("server received STOP signal")
 		s.config.CloseMongoDB(ctx)
 		s.worker.Stop()
-
 		err := server.Shutdown(ctx)
 		if err != nil {
 			return fmt.Errorf("graceful shutdown did not complete: %w", err)

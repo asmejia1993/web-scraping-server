@@ -26,15 +26,16 @@ type FranchiseReq struct {
 }
 
 type SiteRes struct {
-	Id          string   `json:"id"`
-	Protocol    string   `json:"protocol"`
-	Step        int      `json:"steps"`
-	ServerNames []string `json:"server_names"`
-	CreatedAt   string   `json:"created_at"`
-	ExpiresAt   string   `json:"expires_at"`
-	Registrant  string   `json:"registrant"`
-	Email       string   `json:"email_contact"`
-	IsValid     bool     `json:"is_valid"`
+	Id          string       `json:"id"`
+	Protocol    string       `json:"protocol"`
+	Step        int          `json:"steps"`
+	ServerNames []string     `json:"server_names"`
+	CreatedAt   string       `json:"created_at"`
+	ExpiresAt   string       `json:"expires_at"`
+	Registrant  string       `json:"registrant"`
+	Email       string       `json:"email_contact"`
+	IsValid     bool         `json:"is_valid"`
+	Franchise   FranchiseReq `json:"franchise"`
 }
 
 type InformationReq struct {

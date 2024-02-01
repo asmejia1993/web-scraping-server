@@ -1,21 +1,23 @@
 package scraper
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
-	"math/rand"
 	"net"
 	"net/http"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/ratelimit"
+	"golang.org/x/time/rate"
 )
 
 type Service struct {
 	httpClient *http.Client
 	logger     *logrus.Logger
-	limiter    ratelimit.Limiter
+	limiter    *rate.Limiter
 }
 
 func NewService(log *logrus.Logger) *Service {
@@ -37,7 +39,7 @@ func NewService(log *logrus.Logger) *Service {
 	return &Service{
 		httpClient: httpClient,
 		logger:     log,
-		limiter:    ratelimit.New(10),
+		limiter:    rate.NewLimiter(10, 1),
 	}
 }
 
@@ -45,29 +47,36 @@ type CallResponse struct {
 	Payload []byte
 }
 
-func (s *Service) CallAPI(url string) (CallResponse, error) {
-
+func (s *Service) CallAPI(ctx context.Context, url string) (CallResponse, error) {
 	start := time.Now()
 
+	response := CallResponse{}
 	// Apply rate limiting
-	s.limiter.Take()
+	if err := s.limiter.Wait(ctx); err != nil {
+		return response, err
+	}
 
-	res, err := s.httpClient.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return response, err
+	}
+
+	res, err := s.httpClient.Do(req)
 	if err != nil {
 		s.logger.Errorf("call external service returned: %v\n", err)
-		return CallResponse{}, fmt.Errorf("HTTP request failed: %w", err)
+		return response, fmt.Errorf("HTTP request failed: %w", err)
 	}
 	defer res.Body.Close()
 
 	content, err := io.ReadAll(res.Body)
 	if err != nil {
-		return CallResponse{}, fmt.Errorf("failed to read response body: %w", err)
+		return response, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	// Handle non-successful status codes
-	if res.StatusCode >= 400 || res.StatusCode < 500 {
+	if res.StatusCode >= 400 && res.StatusCode < 500 {
 		s.logger.Errorf("external service returned bad response. Status Code: %d. Content: %s\n", res.StatusCode, string(content))
-		return CallResponse{}, nil
+		return response, errors.New("bad response")
 	}
 
 	duration := time.Since(start).Seconds()
@@ -75,43 +84,30 @@ func (s *Service) CallAPI(url string) (CallResponse, error) {
 	return CallResponse{Payload: content}, nil
 }
 
-func (s *Service) CallAPIWithRetry(url string, maxRetries int) (CallResponse, error) {
+func (s *Service) CallAPIWithRetry(ctx context.Context, url string, maxRetries int) (CallResponse, error) {
 	var resp CallResponse
 	var err error
 
 	// Retry with exponential backoff and jitter
-	err = retryWithBackoff(maxRetries, 2*time.Second, func() error {
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 0 // Retry indefinitely
+	b.MaxInterval = 10 * time.Second
+	b.RandomizationFactor = 0.5
+
+	err = backoff.RetryNotify(func() error {
 		// Call the API
-		resp, err = s.CallAPI(url)
+		resp, err = s.CallAPI(ctx, url)
 		if err != nil {
-			fmt.Printf("API call failed: %v\n", err)
+			s.logger.Printf("API call failed: %v\n", err)
 		}
 		return err
+	}, b, func(err error, t time.Duration) {
+		s.logger.Printf("Retry attempt %d failed. Retrying in %v...\n", 3, t)
 	})
 
 	if err != nil {
-		return CallResponse{}, fmt.Errorf("exceeded max retry attempts: %w", err)
+		return resp, fmt.Errorf("exceeded max retry attempts: %w", err)
 	}
 
 	return resp, nil
-}
-
-func retryWithBackoff(maxRetries int, initialDelay time.Duration, fn func() error) error {
-	delay := initialDelay
-	for attempt := 1; attempt <= maxRetries; attempt++ {
-		err := fn()
-		if err == nil {
-			return nil
-		}
-
-		// Calculate the next delay using exponential backoff with jitter
-		jitter := time.Duration(rand.Int63n(int64(delay / 2)))
-		nextDelay := delay + jitter
-
-		fmt.Printf("Retry attempt %d failed. Retrying in %v...\n", attempt, nextDelay)
-
-		time.Sleep(nextDelay)
-		delay *= 2 // Exponential backoff
-	}
-	return fmt.Errorf("exceeded max retry attempts")
 }

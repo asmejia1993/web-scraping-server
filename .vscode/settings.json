@@ -3,6 +3,7 @@
         "arrs",
         "Backoff",
         "bson",
+        "errgroup",
         "gocolly",
         "Infof",
         "likexian",
@@ -13,9 +14,11 @@
         "SSLLABS",
         "Subrouter",
         "unmarshalling",
+        "Upsert",
         "usecase",
         "Whois",
         "whoisparser",
-        "workchan"
+        "workchan",
+        "workerpool"
     ]
 }
