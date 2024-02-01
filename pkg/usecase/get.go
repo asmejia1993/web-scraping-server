@@ -8,5 +8,4 @@ import (
 
 func (s Service) Get(id string, ctx context.Context) model.FranchiseInfo {
 	return s.repo.FindFranchisesById(id, ctx)
-
 }

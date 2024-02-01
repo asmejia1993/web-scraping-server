@@ -3,7 +3,9 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/asmejia1993/web-scraping-server/pkg/domain/hotel-franchises/model"
 )
@@ -29,6 +31,23 @@ func (hf handlerFranchises) Create() http.HandlerFunc {
 		response := inserted{
 			ID: res,
 		}
+
+		//Create franchise size
+		// key: id.franchise.size
+		//value: n
+		key := fmt.Sprintf("%s.franchises.size", response.ID)
+		value := len(fr.Company.Franchises)
+		hf.logger.Infof("creating franchise size in redis with key: %s, value: %d", key, value)
+		hf.fService.SetKey(r.Context(), key, value)
+
+		//Create franchise processed
+		// key: id.franchise.processed
+		//value: 0
+		key = fmt.Sprintf("%s.franchises.processed", response.ID)
+		value = 0
+		hf.logger.Infof("creating franchise processed in redis with key: %s, value: %d", key, value)
+		hf.fService.SetKey(r.Context(), key, value)
+
 		hf.logger.Infof("response: %v", response)
 		if err != nil {
 			hf.respond(w, err, http.StatusInternalServerError)
@@ -70,9 +89,19 @@ func (hf handlerFranchises) Create() http.HandlerFunc {
 }
 
 func (hf handlerFranchises) processResult(ctx context.Context, res model.SiteRes) error {
-	if err := hf.fService.Upsert(ctx, res); err != nil {
+	//updating franchise processed
+	err := hf.fService.Upsert(ctx, res)
+	if err != nil {
 		hf.logger.Errorf("error calling upsert handler: %v", err)
 		return err
+	}
+	key := fmt.Sprintf("%s.franchises.processed", res.Id)
+	val, err := hf.fService.GetKey(context.TODO(), key)
+	if err != nil {
+		hf.logger.Errorf("error updating cache with key: %s, error: %v", key, err)
+	} else {
+		count, _ := strconv.Atoi(val)
+		hf.fService.SetKey(context.TODO(), key, count+1)
 	}
 	return nil
 }

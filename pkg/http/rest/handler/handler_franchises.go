@@ -23,13 +23,13 @@ type handlerFranchises struct {
 	resultChan <-chan model.SiteRes
 }
 
-func NewHandler(lg *logrus.Logger, db *config.DBInfo, worker *workerpool.WorkerPool, ctx context.Context) handlerFranchises {
+func NewHandler(lg *logrus.Logger, config *config.AppConfig, worker *workerpool.WorkerPool, ctx context.Context) handlerFranchises {
 
 	worker.Start(ctx)
 
 	return handlerFranchises{
 		logger:     lg,
-		fService:   fs.NewService(fr.NewFranchiseRepository(db)),
+		fService:   fs.NewService(fr.NewFranchiseRepository(config.MongoDBInfo), fr.NewRedisRepository(config.RedisInfo)),
 		workerPool: worker,
 		resultChan: worker.GetResultChan(),
 	}

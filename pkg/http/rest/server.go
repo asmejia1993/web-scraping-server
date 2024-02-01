@@ -45,7 +45,7 @@ func NewServer(ctx context.Context) (*Server, error) {
 		config: appConfig,
 		worker: worker,
 	}
-	hf := handler.NewHandler(log, appConfig.MongoDBInfo, s.worker, ctx)
+	hf := handler.NewHandler(log, appConfig, s.worker, ctx)
 	handler.Register(router, &hf, ctx)
 	return &s, nil
 }

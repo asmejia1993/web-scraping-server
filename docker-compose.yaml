@@ -12,6 +12,15 @@ services:
     volumes:
       - mongo_db:/data/db
 
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning 
+    volumes: 
+      - redis:/data
+
   # API service
   api:
     build:
@@ -23,8 +32,11 @@ services:
       DATABASE_HOST: mongodb://mongo_db:27017/
       DATABASE_NAME: web-scraping
       SERVER_PORT: 8083
+      REDIS_HOST: redis:6379
     depends_on:
       - mongo_db
+      - redis
 
 volumes:
   mongo_db: {}
+  redis: {}
