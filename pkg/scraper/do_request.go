@@ -90,8 +90,8 @@ func (s *Service) CallAPIWithRetry(ctx context.Context, url string, maxRetries i
 
 	// Retry with exponential backoff and jitter
 	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 0 // Retry indefinitely
-	b.MaxInterval = 10 * time.Second
+	b.MaxElapsedTime = time.Second * 20
+	b.MaxInterval = 1 * time.Second
 	b.RandomizationFactor = 0.5
 
 	err = backoff.RetryNotify(func() error {

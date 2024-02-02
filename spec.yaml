@@ -1,0 +1,162 @@
+swagger: "2.0"
+info:
+  description: " ## Server \n\n ### Release : 1.0.0 \n\
+    \n APIs handle process related to scraper several hotel websites\
+    
+    \ \n\n ### Operations \n\n APIS : 
+    \n\n - Find All franchises hotel belongs to an Owner providing a several filters\
+    \n\n - Save the information related to the franchises and start the process of scraping\
+    \n\n - Get the information related to an Owner"
+  version: "1.0.0"
+  title: "Web Scraping App"
+host: "http://localhost:8083"
+basePath: "/api/v1/web-scraping"
+paths:
+  /{id}:
+    get:
+      summary: "get the franchise info by id"
+      description: Returns a single owner
+      produces:
+      - "application/json"
+      parameters:
+        - name: id
+          in: path
+          description: ID of owner info
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Success response"
+          schema:
+            $ref: "#/definitions/Company"
+  /: 
+    post:
+      summary: "Add a new owner and start scraping process"
+      description: ""
+      operationId: "addPet"
+      produces:
+      - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: ""
+          required: true
+          schema:
+            $ref: "#/definitions/Company"
+      responses:
+        202:
+          description: "Success response"
+          schema:
+            $ref: "#/definitions/Post"
+
+  
+definitions:
+  Company:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique identifier for the company
+      owner:
+        type: object
+        properties:
+          first_name:
+            type: string
+            description: Owner's first name
+          last_name:
+            type: string
+            description: Owner's last name
+          contact:
+            type: object
+            properties:
+              email:
+                type: string
+                format: email
+                description: Owner's email address
+              phone:
+                type: string
+                description: Owner's phone number
+              location:
+                $ref: '#/definitions/Location'
+      information:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Company name
+          tax_number:
+            type: string
+            description: Company's tax number
+          location:
+            $ref: '#/definitions/Location'
+      franchises:
+        type: array
+        items:
+          $ref: '#/definitions/Franchise'
+  Location:
+    type: object
+    properties:
+      city:
+        type: string
+        description: City name
+      country:
+        type: string
+        description: Country name
+      address:
+        type: string
+        description: Street address
+      zip_code:
+        type: string
+        description: Postal code
+  Franchise:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Franchise name
+      url:
+        type: string
+        format: uri
+        description: Franchise website URL
+      location:
+        $ref: '#/definitions/Location'
+      site:
+        $ref: '#/definitions/Site'
+  Site:
+    type: object
+    properties:
+      protocol:
+        type: string
+        description: Protocol used by the website
+      steps:
+        type: integer
+        description: Number of steps
+      server_names:
+        type: array
+        items:
+          type: string
+        description: List of server names
+      created_at:
+        type: string
+        format: date-time
+        description: Date and time when the site was created
+      expires_at:
+        type: string
+        format: date-time
+        description: Date and time when the site expires
+      registrant:
+        type: string
+        description: Registrant information
+      email_contact:
+        type: string
+        format: email
+        description: Email contact for the sit
+        
+  Post:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique identifier for the company
+
+  
